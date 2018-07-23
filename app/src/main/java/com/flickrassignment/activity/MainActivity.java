@@ -1,5 +1,7 @@
 package com.flickrassignment.activity;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -24,7 +26,7 @@ import com.flickrassignment.view.BaseView;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements BaseView.MainView, SearchView.OnQueryTextListener {
+public class MainActivity extends AppCompatActivity implements BaseView.MainView{
 
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
@@ -50,17 +52,11 @@ public class MainActivity extends AppCompatActivity implements BaseView.MainView
         MenuItem menuItem = menu.findItem(R.id.action_search);
         SearchView searchView = (SearchView) menuItem.getActionView();
         searchView.setFocusable(false);
-        searchView.setOnQueryTextListener(this);
-        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                if (photoItems != null && photoItems.size() > 0) {
-                    adapter = new PhotosAdapter(MainActivity.this, photoItems,recyclerItemClickListener);
-                    recyclerView.setAdapter(adapter);
-                }
-                return false;
-            }
-        });
+        SearchManager searchManager =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -81,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements BaseView.MainView
 
     /**
      * RecyclerItem click event listener
-     * */
+     */
     private RecyclerItemClickListener recyclerItemClickListener = new RecyclerItemClickListener() {
         @Override
         public void onItemClick(PhotoItem notice, int position) {
@@ -96,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements BaseView.MainView
     @Override
     public void setDataToRecyclerView(ArrayList<PhotoItem> photoItems) {
         this.photoItems = photoItems;
-        adapter = new PhotosAdapter(this, photoItems , recyclerItemClickListener);
+        adapter = new PhotosAdapter(this, photoItems, recyclerItemClickListener);
         recyclerView.setAdapter(adapter);
 
     }
@@ -106,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements BaseView.MainView
         Toast.makeText(MainActivity.this,
                 "Something went wrong...Error message: " + throwable.getMessage(),
                 Toast.LENGTH_LONG).show();
-        Log.e("TAGTAG", "onResponseFailure: " + throwable.getMessage() );
+        Log.e("TAGTAG", "onResponseFailure: " + throwable.getMessage());
     }
 
 
@@ -116,29 +112,5 @@ public class MainActivity extends AppCompatActivity implements BaseView.MainView
         presenter.onDestroy();
     }
 
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        if (photoItems != null && photoItems.size() > 0) {
-            if (!TextUtils.isEmpty(query)) {
-                ArrayList<PhotoItem> newPhotoItems = new ArrayList<>();
-                for (int i = 0; i < photoItems.size(); i++) {
-                    if (!TextUtils.isEmpty(photoItems.get(i).getTags()) && photoItems.get(i).getTags().toLowerCase().contains(query.toLowerCase())) {
-                        newPhotoItems.add(photoItems.get(i));
-                    }
-                }
-                adapter = new PhotosAdapter(this, newPhotoItems,recyclerItemClickListener);
-                recyclerView.setAdapter(adapter);
-            } else {
-                adapter = new PhotosAdapter(this, photoItems,recyclerItemClickListener);
-                recyclerView.setAdapter(adapter);
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-        return false;
-    }
 }
 
